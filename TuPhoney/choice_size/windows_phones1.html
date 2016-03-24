@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>TuPhoney</title>
+
+		<link rel="stylesheet" href="../themes/TuPhoneC.min.css" />
+		<link rel="stylesheet" href="../themes/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile.structure-1.4.5.min.css" />
+		<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+		<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	</head>
+	<body>
+		<div data-role="page" id="Windows_1">
+			<header  data-role="header" data-add-back-btn="true">
+				<h1>Which phone suits you</h1>
+			</header>
+			<article data-role="content">
+				<div class="choice_list">
+					<h1>Choose your phone and see the preferences</h1>
+					<ul data-role="listview" data-inset="true" data-filter="true">
+						<li>
+							<a href="../choice_phone/microsoft_lumia_650.html" data-transition="slidedown"> <img src="../images/lumia-650-saana.png"> Microsoft Lumia 650 </a>
+						</li>
+					</ul>
+
+				</div>
+				<br />
+				<hr />
+				<div>
+					<ul data-role="listview" id="list">
+						<!-- Empty list, will be filled dynamically -->
+					</ul>
+					<p></p>
+					<p>
+						Got a favorite? Type to add it to the list!
+					</p>
+					<p></p>
+					<!-- <ul> -->
+					<form>
+						<input type="text" data-clear-btn="true" name="newTask" id="newTask" value="Enter task data">
+					</form>
+					<p></p>
+					<!-- <li><a href="" data-role="button" id="addTask" >Add task</a></li>
+					<li><a href="" data-role="button" id="removeTasks" >Remove all tasks</a></li> -->
+					<div data-role="controlgroup" data-type="horizontal" data-mini="true">
+						<a href="#" id="addTask" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-plus ui-btn-b">Add</a>
+
+					</div>
+					<!-- </ul> -->
+				</div>
+			</article>
+		</div><!-- page -->
+		<div data-role="page" id="secondPage">
+			<div>
+				<header>
+					<h1>Favorite Edit</h1>
+				</header>
+				<form>
+					<input type="text" data-clear-btn="true" name="updTask" id="updTask" value="Enter task data">
+				</form>
+				<p></p>
+				<div data-role="controlgroup" data-type="horizontal" data-mini="true">
+					<a href="#" id="updateTask" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-plus ui-btn-b">Update</a>
+					<a href="#" id="deleteTask" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-delete ui-btn-b">Delete</a>
+				</div>
+				<p></p>
+				<a href="#Windows_1">Return to phonelist</a>
+			</div>
+		</div>
+		<script>
+			$("#addTask").click(function() {
+
+				// Retrieve saved list from local storage
+				var taskArray = new Array();
+				var savedString = localStorage.getItem("taskKey");
+				if (savedString != null) {
+					taskArray = JSON.parse(savedString);
+				} else {
+					// nothing
+				}
+
+				// Add a new task with given task data to the list and save to local storage
+				if ($('#newTask').val() != "") {
+					taskArray.push($('#newTask').val());
+					localStorage.setItem("taskKey", JSON.stringify(taskArray));
+					console.log('Task added: ' + $('#newTask').val());
+				} else {
+					console.log('No new task added, task data was empty !!');
+				}
+
+				// Reset the task data
+				$('#newTask').val("Enter task data");
+
+				// Rebuild the visible list
+				$("#list").empty();
+				for (var i = 0; i < taskArray.length; i++) {
+					$('#list').append('<li>' + taskArray[i] + '</li>');
+				}
+				$('#list').listview("refresh");
+			});
+
+			// Remove all tasks
+			$("#removeTasks").click(function() {
+				localStorage.clear();
+				$("#list").empty();
+				$('#list').listview("refresh");
+			});
+
+			// Identify which task selected and navigate to task detail
+			$('#list').on('tap', 'li', function() {
+				console.log('List item ' + $(this).index() + ' selected !!');
+
+				localStorage.setItem("taskSelected", $(this).index());
+
+				$.mobile.navigate("#secondPage", {
+					transition : "slide",
+					info : "Task detail info"
+				});
+			});
+
+			$("#updateTask").click(function() {
+
+				console.log('Update task');
+
+				if ($('#updTask').val() != "") {
+
+					// Retrieve saved list from local storage, update it with modified task data, and save to local storage
+					var taskArray = new Array();
+					var savedString = localStorage.getItem("taskKey");
+					taskArray = JSON.parse(savedString);
+					taskArray[localStorage.getItem("taskSelected")] = $('#updTask').val();
+					localStorage.setItem("taskKey", JSON.stringify(taskArray));
+
+					// Navigate to previous page
+					$.mobile.navigate("#Windows_1", {
+						transition : "slide",
+						info : "Task list"
+					});
+				}
+			});
+
+			$("#deleteTask").click(function() {
+
+				console.log('Delete task');
+
+				// Retrieve saved list from local storage, delete selected task, and save to local storage
+				var taskArray = new Array();
+				var savedString = localStorage.getItem("taskKey");
+				taskArray = JSON.parse(savedString);
+				taskArray.splice(localStorage.getItem("taskSelected"), 1);
+				localStorage.setItem("taskKey", JSON.stringify(taskArray));
+
+				// Navigate to previous page
+				$.mobile.navigate("#Windows_1", {
+					transition : "slide",
+					info : "Task list"
+				});
+
+			});
+		</script>
+		<script>
+			////////////////////////////////////////////////////////////
+			// Init the page with the list as saved in local storage
+			////////////////////////////////////////////////////////////
+			//		$(document).on("pagecreate",'#firstPage', function(){
+			$(document).on("pageshow", '#Windows_1', function() {
+
+				console.log('Show of firstPage');
+
+				var taskArray = new Array();
+				var savedString = localStorage.getItem("taskKey");
+				if (savedString != null) {
+					taskArray = JSON.parse(savedString);
+				}
+
+				$("#list").empty();
+				for (var i = 0; i < taskArray.length; i++) {
+					$('#list').append('<li>' + taskArray[i] + '</li>');
+				}
+				$('#list').listview("refresh");
+			});
+
+			////////////////////////////////////////////////////////////
+			// Init the page with the task detail of the selected task
+			////////////////////////////////////////////////////////////
+			//		$(document).on("pagecreate",'#secondPage', function(){
+			$(document).on("pageshow", '#secondPage', function() {
+
+				console.log('Show of secondPage');
+
+				// Retrieve index of selected list item (task) from local storage
+				var index = localStorage.getItem("taskSelected");
+
+				console.log('List idem id selected: ' + index);
+
+				// Retrieve saved list from local storage
+				var taskArray = new Array();
+				var savedString = localStorage.getItem("taskKey");
+				taskArray = JSON.parse(savedString);
+
+				// Fill task detail prior to display on the screen
+				$('#updTask').val(taskArray[index]);
+
+			});
+		</script>
+	</body>
+</html>
